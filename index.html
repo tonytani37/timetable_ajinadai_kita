@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿品台北発バス時刻表</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        select {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>阿品台北発バス時刻表</h1>
+    
+    <label for="routeSelect">路線を選択:</label>
+    <select id="routeSelect">
+        <option value="">選択してください</option>
+    </select>
+
+    <div id="schedule"></div>
+
+    <!-- <script src="script.js"></script> -->
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    fetch("bus_schedule.json") // JSONファイルを読み込む
+        .then(response => response.json())
+        .then(data => {
+            const routes = data["阿品台北発"];
+            const routeSelect = document.getElementById("routeSelect");
+            const scheduleDiv = document.getElementById("schedule");
+
+            // 路線選択肢を追加
+            Object.keys(routes).forEach(company => {
+                Object.keys(routes[company]).forEach(route => {
+                    const option = document.createElement("option");
+                    option.value = route;
+                    option.textContent = `${company} - ${route}`;
+                    routeSelect.appendChild(option);
+                });
+            });
+
+            // 路線が選択されたら時刻表を表示
+            routeSelect.addEventListener("change", function () {
+                const selectedRoute = this.value;
+                scheduleDiv.innerHTML = ""; // 以前の表示をクリア
+
+                if (selectedRoute) {
+                    let selectedCompany;
+                    Object.keys(routes).forEach(company => {
+                        if (routes[company][selectedRoute]) {
+                            selectedCompany = company;
+                        }
+                    });
+
+                    const scheduleData = routes[selectedCompany][selectedRoute];
+                    const table = document.createElement("table");
+
+                    // ヘッダー
+                    const thead = document.createElement("thead");
+                    thead.innerHTML = `
+                        <tr>
+                            <th>行き先</th>
+                            <th>平日</th>
+                            <th>土曜・日曜・祝日</th>
+                        </tr>
+                    `;
+                    table.appendChild(thead);
+
+                    // ボディ
+                    const tbody = document.createElement("tbody");
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${scheduleData["行き先"]}</td>
+                        <td>${scheduleData["時刻表"]["平日"].join(", ")}</td>
+                        <td>${scheduleData["時刻表"]["土曜・日曜・祝日"].join(", ")}</td>
+                    `;
+                    tbody.appendChild(row);
+                    table.appendChild(tbody);
+
+                    scheduleDiv.appendChild(table);
+                }
+            });
+        })
+        .catch(error => console.error("JSONの読み込みに失敗しました:", error));
+});
+</script>
+<!-- </body> -->
+</html>
